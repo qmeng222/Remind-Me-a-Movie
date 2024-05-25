@@ -68,14 +68,15 @@ print(df_movies_filt.shape)  # (36976, 20)
 max_word_count(df_movies_filt["overview"])  # 193 words
 # 🥳 The maximum description length is 193 words, which is below the threshold which is coming from our model (256).
 
+
 # %% calculate the word count for each movie description & store these counts in a list:
 description_len = []
 for txt in df_movies_filt.loc[
     :, "overview"
 ]:  # selecting all rows and the "overview" col
     description_len.append(len(re.findall(r"\w+", txt)))
-
 print(len(description_len))  # 36976
+
 
 """
 Iteration 1
@@ -83,6 +84,7 @@ txt = 'This is the first movie.'
 re.findall(r"\w+", txt) returns ['This', 'is', 'the', 'first', 'movie']
 len(['This', 'is', 'the', 'first', 'movie']) is 5
 description_len.append(5)
+
 
 Iteration 2
 txt = 'An exciting new adventure awaits.'
@@ -98,5 +100,55 @@ sns.histplot(description_len, bins=100)
 # 👀 Most overviews fall below 100 words.
 
 
-# %% embedding func:
+# %% embedding func to be used for encoding text data into vectors:
 embedding_fn = SentenceTransformerEmbeddingFunction()
+
+
+# %%
+# # create a client object to connect to and interact with a Chroma database:
+# chroma_db = chromadb.Client()
+
+# create a client object to interact with a Chroma database named 'db':
+chroma_db = chromadb.PersistentClient("db")  # create a local chroma db called 'db'
+
+chroma_db.list_collections()  # list the tables in `chroma_db`
+# [], no tables as we just started
+
+
+# %% create (if the collection does not exist) or retrieve (if the collection already exists) the collection (table) called "movies":
+chroma_collection = chroma_db.get_or_create_collection(
+    "movies",
+    embedding_function=embedding_fn,  # for encoding text data into vectors
+)
+
+chroma_db.list_collections()  # [Collection(name=movies)]
+
+
+# %% convert the vals in the specified cols to str & store them in python lists:
+ids = df_movies_filt["id"].astype(str).tolist()  # int64 -> str
+# print(ids)  # [ '615656', '758323', ... ]
+documents = df_movies_filt["overview"].tolist()  # pandas series -> python list
+titles = df_movies_filt["title"].tolist()
+metadatas = [{"title": title} for title in titles]
+# print(
+#     metadatas[:5]
+# )  # [ {'title': 'Meg 2: The Trench'}, {'title': "The Pope's Exorcist"}, ... ]
+
+
+# %% add data to the movies collection in the ChromaDB database in batches:
+batch_size = 5000
+for i in range(0, len(ids), batch_size):
+    print(i)  # i = 0, 5000, 10000, ...
+    chroma_collection.add(
+        ids=ids[i : i + batch_size],
+        documents=documents[i : i + batch_size],
+        metadatas=metadatas[i : i + batch_size],
+    )
+
+
+# %% retrieve the IDs of all documents stored within the chroma_collection collection in the ChromaDB database
+print(chroma_collection.get()["ids"])  # ['100', '10000', '10001', ...]
+print(len(chroma_collection.get()["ids"]))  # 36976
+
+
+# %%

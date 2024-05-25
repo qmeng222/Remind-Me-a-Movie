@@ -1,1 +1,5 @@
+# virtual env:
 .venv/
+
+# vector db folders:
+db/
