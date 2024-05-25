@@ -5,7 +5,7 @@
 - Description: A project that leverages the rich Kaggle movie dataset and sentence transformers to help users find specific movies by describing the plot with keywords.
 - Tech stack:
 - Demo:
-  ![project demo](images/)
+  ![project demo](images/res_overview.png)
 
 ## Setup:
 
@@ -20,5 +20,5 @@
 
 ## Resources:
 
-1. [Kaggle datasets](https://www.kaggle.com/datasets)
-2. []()
+1. [Kaggle Datasets](https://www.kaggle.com/datasets)
+2. [Chroma Docs](https://docs.trychroma.com/)
