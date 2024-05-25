@@ -54,7 +54,6 @@ print(df_movies_raw.head())  # first 5 entries
 
 
 # %% filter enties with missing info and duplicate ids:
-
 # filter movies for missing title or overview:
 df_movies_filt = df_movies_raw.dropna(subset=["title", "overview"])
 print(df_movies_filt.shape)  # (38371, 20)
@@ -64,7 +63,7 @@ df_movies_filt = df_movies_filt.drop_duplicates(subset=["id"])
 print(df_movies_filt.shape)  # (36976, 20)
 
 
-# %% call the helper func to check the max word count from a list of text strings:
+# %% call the func to check the max word count from a list of text strings:
 max_word_count(df_movies_filt["overview"])  # 193 words
 # 🥳 The maximum description length is 193 words, which is below the threshold which is coming from our model (256).
 
@@ -150,5 +149,24 @@ for i in range(0, len(ids), batch_size):
 print(chroma_collection.get()["ids"])  # ['100', '10000', '10001', ...]
 print(len(chroma_collection.get()["ids"]))  # 36976
 
+
+# %% get title by description:
+def get_title_by_description(query_text: str):
+    n_results = 3
+    res = chroma_collection.query(query_texts=[query_text], n_results=n_results)
+    # print("👀", res)
+    """
+    {'ids': [['320288', '127585', '121133']], 'distances': [[0.8340994119644165, 0.8993083238601685, 0.902590811252594]], 'metadatas': [[{'title': 'Dark Phoenix'}, {'title': 'X-Men: Days of Future Past'}, {'title': 'X-Men: The Legend of Wolverine'}]], 'embeddings': None, 'documents': [["The X-Men face their most formidable and powerful foe when one of their own Jean Grey starts to spiral out of control. During a rescue mission in outer space Jean is nearly killed when she's hit by a mysterious cosmic force. Once she returns home this force not only makes her infinitely more powerful but far more unstable. The X-Men must now band together to save her soul and battle aliens that want to use Grey's new abilities to rule the galaxy.", 'The ultimate X-Men ensemble fights a war for the survival of the species across two time periods as they join forces with their younger selves in an epic battle that must change the past – to save our future.', "The most popular Super Hero Team in history is ready for action in a spectacular series of thrilling adventures. When a familiar face from Wolverine's former life resurfaces he must wage a war he never intended. Ultimately the X-Men must join forces with Magneto in a fight to save all mutants from annihilation.  Discover the truth of Wolverine's secret past and watch his decisive battle as he is forced to make a choice that will forever affect the fate of the X-Men."]], 'uris': None, 'data': None}
+    """
+    for i in range(n_results):
+        # NOTE: metadatas = [{"title": title} for title in titles]
+        pprint(f"Title: {res['metadatas'][0][i]['title']}")
+        # NOTE: documents = df_movies_filt["overview"].tolist()
+        pprint(f"Description: {res['documents'][0][i]}")
+        pprint("---------------------------------")
+
+
+# %% call the func:
+get_title_by_description(query_text="X, superheros")
 
 # %%
